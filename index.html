@@ -2649,17 +2649,19 @@ function showPreview(parsed,origin){
   if(r.definidos.length)h+='<h3>Previsões que viram jogo definido</h3><div class="list">'+r.definidos.map(function(u){return gl(u);}).join('')+'</div>';
   if(r.novos.length)h+='<h3>Novos</h3><div class="list">'+r.novos.map(function(u){return gl(u);}).join('')+'</div>';
   if(r.ausentes.length)h+='<h3>Já estavam na escala, mas não vieram nesta tabela</h3><div class="list">'+r.ausentes.map(function(u){return gl(u);}).join('')+'</div><label class="row"><input type="checkbox" id="rmAus"> Excluir esses '+r.ausentes.length+' jogos ao aplicar</label>';
+  h+='<label class="row"><input type="checkbox" id="keepEsc" checked> Manter as escalas atuais: quem já está escalado continua; só as vagas vazias e os jogos novos são preenchidos</label>';
   h+='<div class="row"><button class="btn primary" id="btnApply">Aplicar na escala</button><button class="btn" id="btnCancelImp">Descartar</button></div></div>';
   $('preview').innerHTML=h;
 }
 function applyPending(){
   if(!pending)return;var rm=$('rmAus')&&$('rmAus').checked?pending.report.ausentes:[];
+  var nKeep=0;if($('keepEsc')&&$('keepEsc').checked&&result&&!S.pendente){S.frozen=S.frozen||{};result.slots.forEach(function(s){if(rm.indexOf(s.game.uid)>=0||S.locks[s.key]||(S.pendenteComp||{})[s.game.comp]||result.gapSet[s.key])return;var nm=result.assign[s.key];if(nm){S.frozen[s.key]=nm;nKeep++;}});}
   S.games=pending.games.filter(function(g){return rm.indexOf(g.uid)<0;});
   rm.forEach(function(u){Object.keys(S.locks).forEach(function(k){if(k.indexOf(u+'|')===0)delete S.locks[k];});});
   S.prem.ano=+$('year').value||S.prem.ano;
   var r=pending.report;pending=null;$('preview').innerHTML='';
   filt.from='';filt.to='';recompute();
-  toast(r.novos.length+' novos, '+r.alterados.length+' alterados'+(rm.length?', '+rm.length+' excluídos':'')+'.');
+  toast(r.novos.length+' novos, '+r.alterados.length+' alterados'+(rm.length?', '+rm.length+' excluídos':'')+(nKeep?', escalas atuais mantidas':'')+'.');
 }
 function readFile(f){
   var name=f.name.toLowerCase();
